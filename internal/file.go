@@ -27,6 +27,16 @@ import (
 	"github.com/jacobsa/fuse/fuseops"
 )
 
+//for UploadThreshold
+type UploadThreshold struct {
+	currentUpload int64 //当前正在上传的数据字节数
+	threshold     int64 //上传阈值
+	lock          sync.Mutex
+	cond          *sync.Cond
+}
+
+var uploadThreshold UploadThreshold = UploadThreshold{}
+
 type FileHandle struct {
 	inode *Inode
 	cloud StorageBackend
@@ -135,6 +145,11 @@ func (fh *FileHandle) mpuPartNoSpawn(buf *MBuf, part uint32, total int64, last b
 	}
 
 	defer func() {
+		uploadThreshold.lock.Lock()
+		uploadThreshold.currentUpload -= 1
+		uploadThreshold.cond.Signal()
+		uploadThreshold.lock.Unlock()
+
 		if mpu.Body != nil {
 			bufferLog.Debugf("Free %T", buf)
 			buf.Free()
@@ -159,6 +174,13 @@ func (fh *FileHandle) mpuPart(buf *MBuf, part uint32, total int64) {
 			return
 		}
 	}
+
+	uploadThreshold.lock.Lock()
+	for uploadThreshold.currentUpload >= uploadThreshold.threshold {
+		uploadThreshold.cond.Wait()
+	}
+	uploadThreshold.currentUpload += 1
+	uploadThreshold.lock.Unlock()
 
 	err := fh.mpuPartNoSpawn(buf, part, total, false)
 	if err != nil {

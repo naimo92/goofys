@@ -45,11 +45,12 @@ type FlagStorage struct {
 	Backend interface{}
 
 	// Tuning
-	Cheap        bool
-	ExplicitDir  bool
-	StatCacheTTL time.Duration
-	TypeCacheTTL time.Duration
-	HTTPTimeout  time.Duration
+	Cheap            bool
+	ExplicitDir      bool
+	StatCacheTTL     time.Duration
+	TypeCacheTTL     time.Duration
+	HTTPTimeout      time.Duration
+	NetworkThreshold string
 
 	// Debugging
 	DebugFuse  bool

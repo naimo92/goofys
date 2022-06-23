@@ -16,6 +16,7 @@ package internal
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -245,4 +246,29 @@ func ConvertBytesToIEC(size int64) string {
 		exp += 1
 	}
 	return fmt.Sprintf("%.1f %ciB", curSize, "KMGTPEZY"[exp-1])
+}
+
+//convert string "xxMb" to bytes
+func ConvertIECToBytes(size string) int64 {
+	if size == "" {
+		return 0
+	}
+
+	data_str := size[0 : len(size)-1]
+	data, err := strconv.ParseInt(data_str, 10, 64)
+	if err != nil {
+		return -1
+	}
+
+	b := size[len(size)-1]
+	switch b {
+	case 'K', 'k':
+		return data * 1024
+	case 'M', 'm':
+		return data * 1024 * 1024
+	case 'G', 'g':
+		return data * 1024 * 1024 * 1024
+	default:
+		return -1
+	}
 }

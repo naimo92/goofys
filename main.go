@@ -167,6 +167,16 @@ func main() {
 			flags.Cleanup()
 		}()
 
+		//check NetworkThreshold string
+		size := ConvertIECToBytes(flags.NetworkThreshold)
+		if size < 0 {
+			fmt.Fprintf(
+				os.Stderr,
+				"Error: can not convert NetworkThreshold string %s to int64.\n\n", flags.NetworkThreshold)
+			cli.ShowAppHelp(c)
+			os.Exit(1)
+		}
+
 		if !flags.Foreground {
 			var wg sync.WaitGroup
 			waitForSignal(&wg)

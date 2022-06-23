@@ -178,6 +178,10 @@ func newGoofys(ctx context.Context, bucket string, flags *FlagStorage,
 		umask:  0122,
 	}
 
+	//init upload threshold, we have already checked this
+	uploadThreshold.threshold = ConvertIECToBytes(flags.NetworkThreshold)
+	uploadThreshold.cond = sync.NewCond(&uploadThreshold.lock)
+
 	var prefix string
 	colon := strings.Index(bucket, ":")
 	if colon != -1 {
@@ -208,6 +212,7 @@ func newGoofys(ctx context.Context, bucket string, flags *FlagStorage,
 		log.Errorf("Unable to access '%v': %v", bucket, err)
 		return nil
 	}
+
 	go cloud.MultipartExpire(&MultipartExpireInput{})
 
 	now := time.Now()
